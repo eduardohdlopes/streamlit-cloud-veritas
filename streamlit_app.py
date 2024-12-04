@@ -1,51 +1,24 @@
 import streamlit as st
 import boto3
-import sqlite3
 import hashlib
 from pathlib import Path
 import os
 
-# Configurações do app
-usuarios = st.secrets["db_users"]
-condominios = st.secrets["condominios"]
-
-# Pegar lista de condomínios dos secrets
-condominios = st.secrets.get("condominios", [])
-
-def main():
-    st.title("Upload de Arquivos")
-    condominio = st.selectbox("Selecione o Condomínio", condominios)
-    
 # Configuração da página
 st.set_page_config(page_title="Portal de Upload", layout="wide")
+
+# Tentar carregar configurações dos secrets
+try:
+    condominios = st.secrets["condominios"]
+except:
+    st.error("Lista de condomínios não configurada nos secrets")
+    condominios = []
 
 # Inicializar estado da sessão
 if 'logged_in' not in st.session_state:
     st.session_state.logged_in = False
 if 'condominio' not in st.session_state:
     st.session_state.condominio = None
-
-# Função para criar banco de dados
-def init_db():
-    conn = sqlite3.connect('users.db')
-    c = conn.cursor()
-    c.execute('''CREATE TABLE IF NOT EXISTS users
-                 (username TEXT PRIMARY KEY, password TEXT)''')
-    c.execute('''CREATE TABLE IF NOT EXISTS condominios
-                 (nome TEXT PRIMARY KEY)''')
-    conn.commit()
-    conn.close()
-
-# Função para verificar credenciais
-def verify_credentials(username, password):
-    conn = sqlite3.connect('users.db')
-    c = conn.cursor()
-    hashed_pw = hashlib.sha256(password.encode()).hexdigest()
-    c.execute("SELECT * FROM users WHERE username=? AND password=?", 
-              (username, hashed_pw))
-    result = c.fetchone()
-    conn.close()
-    return result is not None
 
 # Função para upload no S3
 def upload_to_s3(file, condominio):
@@ -79,11 +52,14 @@ def main():
         password = st.text_input("Senha", type="password")
         
         if st.button("Entrar"):
-            if verify_credentials(username, password):
-                st.session_state.logged_in = True
-                st.rerun()
-            else:
-                st.error("Credenciais inválidas")
+            try:
+                if username in st.secrets["db_users"] and st.secrets["db_users"][username] == password:
+                    st.session_state.logged_in = True
+                    st.rerun()
+                else:
+                    st.error("Credenciais inválidas")
+            except:
+                st.error("Configuração de usuários não encontrada")
                 
     else:
         # Tela após login
@@ -91,7 +67,6 @@ def main():
         
         if not st.session_state.condominio:
             # Seleção do condomínio
-            condominios = ["Condomínio A", "Condomínio B", "Condomínio C"]  # Substituir pela lista real
             condominio = st.selectbox("Selecione o Condomínio", condominios)
             
             if st.button("Confirmar"):
@@ -118,5 +93,4 @@ def main():
                 st.rerun()
 
 if __name__ == "__main__":
-    init_db()
     main()
