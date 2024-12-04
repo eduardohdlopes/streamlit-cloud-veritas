@@ -5,6 +5,10 @@ import hashlib
 from pathlib import Path
 import os
 
+# Configurações do app
+usuarios = st.secrets["db_users"]
+condominios = st.secrets["condominios"]
+
 # Configuração da página
 st.set_page_config(page_title="Portal de Upload", layout="wide")
 
