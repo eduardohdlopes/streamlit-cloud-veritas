@@ -9,6 +9,13 @@ import os
 usuarios = st.secrets["db_users"]
 condominios = st.secrets["condominios"]
 
+# Pegar lista de condomínios dos secrets
+condominios = st.secrets.get("condominios", [])
+
+def main():
+    st.title("Upload de Arquivos")
+    condominio = st.selectbox("Selecione o Condomínio", condominios)
+    
 # Configuração da página
 st.set_page_config(page_title="Portal de Upload", layout="wide")
 
