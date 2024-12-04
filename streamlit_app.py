@@ -53,7 +53,14 @@ def main():
         
         if st.button("Entrar"):
             try:
-                if username in st.secrets["db_users"] and st.secrets["db_users"][username] == password:
+                if (username in st.secrets.db_users and 
+                    st.secrets.db_users[username] == password):
+            st.session_state.logged_in = True
+            st.rerun()
+        else:
+            st.error("Credenciais inválidas")
+    except Exception as e:
+        st.error(f"Erro na configuração: {str(e)}")
                     st.session_state.logged_in = True
                     st.rerun()
                 else:
