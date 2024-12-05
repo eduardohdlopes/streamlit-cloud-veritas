@@ -39,8 +39,10 @@ def main():
         
         if st.button("Entrar"):
             try:
-                if (username in st.secrets.db_users and 
-                    st.secrets.db_users[username] == password):
+                # Nova lógica para verificar credenciais
+                user_key = f"db_users_{username}"
+                if (user_key in st.secrets and 
+                    st.secrets[user_key] == password):
                     st.session_state.logged_in = True
                     st.rerun()
                 else:
